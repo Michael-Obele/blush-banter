@@ -1,42 +1,63 @@
-# sv
+# Blush Banter
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Blush Banter is the SvelteKit home for **Blushing Riddles**, a playful party game built around cheeky double-entendre riddles with harmless answers.
 
-## Creating a project
+The app plan is still in draft, so this repository currently serves two purposes:
 
-If you're seeing this, you've probably already done this step. Congrats!
+- a starter SvelteKit codebase for the game UI and server routes
+- a planning hub for the product, research, architecture, and implementation tasks
 
-```sh
-# create a new project
-npx sv create my-app
-```
+## Project Plan
 
-To recreate this project with the same configuration:
+The detailed plan lives in the [blushing-riddles](blushing-riddles/README.md) folder:
 
-```sh
-# recreate this project
-bun x sv@0.15.2 create --template minimal --types ts --add tailwindcss="plugins:typography,forms" eslint prettier --install bun blush-banter
-```
+- [Plan Overview](blushing-riddles/README.md)
+- [Research Notes](blushing-riddles/research.md)
+- [Architecture](blushing-riddles/architecture.md)
+- [Execution Tasks](blushing-riddles/tasks.md)
+
+## What the MVP Should Do
+
+The initial version focuses on a small, safe loop:
+
+1. show a curated riddle card
+2. let the player flip it to reveal the answer
+3. optionally generate new riddles from safe topics through a protected server endpoint
+4. fall back to stock content if generation is refused or unsafe
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Install dependencies and start the dev server:
 
 ```sh
+npm install
 npm run dev
+```
 
-# or start the server and open the app in a new browser tab
+Open a browser tab automatically if you want the app to launch on start:
+
+```sh
 npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
+Create a production build with:
 
 ```sh
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+Preview the production output with:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```sh
+npm run preview
+```
+
+## Notes
+
+- The repo uses SvelteKit, TypeScript, Tailwind CSS, ESLint, and Prettier.
+- The product direction emphasizes safe wordplay, curated seed content, and a polished reveal interaction.
+- Deployment is planned for Vercel, with generated content stored in Postgres-backed storage.
+
+> If you are looking for the product strategy, start with the [plan overview](blushing-riddles/README.md).
