@@ -76,12 +76,12 @@ type GenerationInput = {
 };
 
 const starterPrompts = [
-	'Make it about a household object that sounds suspicious but is completely harmless.',
-	'Make it about a travel item with dramatic wording and an innocent answer.',
-	'Make it about an office tool with playful misdirection and a clean reveal.',
-	'Make it about a kitchen gadget with a bold setup and a simple answer.',
-	'Make it about a party object with theatrical energy and a harmless finish.',
-	'Make it about a garden item with sly wording and a family-friendly payoff.'
+	'Make it about a household object with a flirty wink, playful misdirection, and a harmless reveal.',
+	'Make it about a travel item that sounds like trouble but ends in a clean, clever punchline.',
+	'Make it about an office tool with cheeky confidence, a teasing setup, and an innocent answer.',
+	'Make it about a kitchen gadget that acts suspiciously smooth but resolves into a simple joke.',
+	'Make it about a party object with mischievous energy, quick wit, and a family-friendly finish.',
+	'Make it about a garden item with sly wording, a little tension, and a harmless payoff.'
 ];
 
 const resolveGenerationPrompt = (prompt: string, round: number) => {
@@ -119,12 +119,13 @@ User profile: ${buildProfileNote(profile)}
 Round: ${round}
 
 Requirements:
-- Make the setup sound a little dramatic or suspicious, but keep it safe.
-- The answer must be a harmless, ordinary thing.
+- Make the setup sound flirtatious, mischievous, and a little dramatic, but never explicit.
+- Keep the joke-forward energy high; the payoff should feel like a wink, not a reveal.
+- The answer must be a harmless, ordinary thing with no sexual, anatomical, or explicit references.
 - Personalize the wording for ${displayName} with a ${vibe} tone.
 - Use the user's favorite topics when it helps, especially ${favoriteTopics}.
 - Keep the riddle concise, punchy, and easy to read on a card.
-- Return only data that matches the schema. No markdown, no code fences, no extra commentary.
+- Favor playful double meaning, teasing banter, and clever misdirection over crude wording.
 
 Field guidance:
 - topic: a short category name.
@@ -150,7 +151,7 @@ export async function buildRound(input: GenerationInput): Promise<Riddle> {
 			model: deepseek('deepseek-chat'),
 			output: Output.object({ schema: riddleOutputSchema }),
 			system:
-				'You are a playful riddle writer. Generate family-friendly riddles with a cheeky setup and a harmless answer.',
+				'You are a playful riddle writer. Generate family-friendly riddles with flirtatious, mischievous, joke-forward energy, but never explicit or sexual. Keep the subtext light, the answer harmless, and the punchline clever.',
 			prompt: buildRiddlePrompt(input)
 		});
 
