@@ -5,7 +5,7 @@
 	import ThemeSwitcher from '$lib/components/theme-switcher.svelte';
 	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js';
 	import { cn } from '$lib/utils.js';
-	import { Gamepad, House, Sparkles } from '@lucide/svelte';
+	import { Gamepad, House, Ghost } from '@lucide/svelte';
 	import { ModeWatcher } from 'mode-watcher';
 
 	let { children } = $props();
@@ -39,7 +39,7 @@
 						<span
 							class="grid size-11 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary shadow-sm transition-transform group-hover:-translate-y-0.5"
 						>
-							<Sparkles class="size-5" />
+							<Ghost class="size-5" />
 						</span>
 						<span class="space-y-0.5">
 							<span
