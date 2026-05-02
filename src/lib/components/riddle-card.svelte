@@ -30,16 +30,16 @@
 	const canShuffle = $derived(!loading);
 
 	const handlePrimaryAction = () => {
-		if (!canReveal) {
-			return;
-		}
+		if (loading) return;
 
 		if (revealed) {
 			onShuffle?.();
 			return;
 		}
 
-		onReveal?.();
+		if (canReveal) {
+			onReveal?.();
+		}
 	};
 </script>
 
@@ -47,30 +47,40 @@
 	class="overflow-hidden border-border/80 bg-card shadow-[0_24px_80px_rgba(61,26,53,0.12)]"
 >
 	<Card.Header class="space-y-3 pb-4">
-		<div class="flex flex-wrap items-center gap-2">
-			<Badge variant="secondary" class="gap-1.5">
-				<Bot class="size-3.5" />
-				<span>{riddle?.topic ?? 'AI round'}</span>
-			</Badge>
-			<Badge variant="outline" class="gap-1.5">
-				<Shield class="size-3.5" />
-				<span>{riddle?.safetyLabel ?? 'Waiting for DeepSeek'}</span>
-			</Badge>
-			<Badge variant="outline" class="gap-1.5">
-				<span class="tracking-[0.24em] uppercase">{riddle?.difficulty ?? 'ready'}</span>
-			</Badge>
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<div class="flex items-center gap-2">
+				<Badge variant="secondary" class="gap-1.5">
+					<Bot class="size-3.5" />
+					<span>{riddle?.topic ?? 'AI round'}</span>
+				</Badge>
+				<Badge variant="outline" class="gap-1.5">
+					<Shield class="size-3.5" />
+					<span>{riddle?.safetyLabel ?? 'Waiting for DeepSeek'}</span>
+				</Badge>
+			</div>
+			{#if !loading}
+				<Button
+					variant="ghost"
+					size="icon"
+					class="size-8 text-muted-foreground hover:text-foreground"
+					onclick={onShuffle}
+					title="New riddle"
+				>
+					<RefreshCw class="size-4" />
+				</Button>
+			{/if}
 		</div>
 
 		<div class="space-y-1.5">
 			<Card.Title class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
 				{revealed
 					? (riddle?.answer ?? 'Ready when DeepSeek responds')
-					: 'Can you guess the answer before reveal?'}
+					: 'Can you guess the answer?'}
 			</Card.Title>
 			<Card.Description class="max-w-prose text-sm leading-6 sm:text-base">
 				{revealed
 					? 'The punch line stays harmless, even when the setup sounds suspicious.'
-					: 'Read the setup, type your guess, then reveal the answer when you are ready.'}
+					: 'Read the setup, type your guess, then reveal the answer.'}
 			</Card.Description>
 		</div>
 	</Card.Header>
@@ -155,18 +165,21 @@
 	</Card.Content>
 
 	<Card.Footer class="flex flex-col gap-3 pt-0 sm:flex-row">
-		<Button class="w-full sm:w-auto" onclick={handlePrimaryAction} disabled={!canReveal}>
-			{#if revealed}
+		<Button
+			class="w-full gap-2 transition-all sm:flex-1"
+			onclick={handlePrimaryAction}
+			disabled={loading || (!revealed && !canReveal)}
+		>
+			{#if loading}
+				<RefreshCw class="size-4 animate-spin" />
+				Thinking...
+			{:else if revealed}
 				<RefreshCw class="size-4" />
-				Next round
+				Play again
 			{:else}
 				<Eye class="size-4" />
-				Show answer
+				Reveal answer
 			{/if}
-		</Button>
-		<Button variant="secondary" class="w-full sm:w-auto" onclick={onShuffle} disabled={!canShuffle}>
-			<Shuffle class="size-4" />
-			New riddle
 		</Button>
 	</Card.Footer>
 </Card.Root>
