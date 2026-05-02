@@ -1,89 +1,108 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import { MorphingText } from '$lib/components/magic/morphing-text/index.js';
+	import RiddleCard from '$lib/components/riddle-card.svelte';
+	import { Signature } from '$lib/components/spell/signature/index.js';
+	import { SpecialText } from '$lib/components/spell/special-text/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import RiddleCard from '$lib/components/riddle-card.svelte';
-	import {
-		cleanPrompt,
-		fallbackRiddle,
-		getPromptTone,
-		isUnsafePrompt,
-		pickRiddleForPrompt,
-		promptPresets,
-		type PromptPreset,
-		type Riddle
-	} from '$lib/data/riddles';
-	import { ArrowRight, RefreshCw, Shield, Sparkles } from '@lucide/svelte';
+	import { cleanPrompt, type PersonalizationProfile, type Riddle } from '$lib/data/riddles';
+	import { generateRound as requestRound } from '$lib/remote';
+	import { Eye, Play, RefreshCw, Shield, Sparkles, WandSparkles } from '@lucide/svelte';
 
-	let promptInput = $state(promptPresets[0].prompt);
+	const heroWords = ['clean', 'dramatic', 'harmless', 'ridiculous'];
+	const flowSteps = [
+		'Start a round with one click.',
+		'Read the setup and type your guess.',
+		'Reveal the answer and compare.'
+	];
+	const emptyProfile: PersonalizationProfile = {
+		name: '',
+		vibe: '',
+		favoriteTopics: ''
+	};
+
 	let generationCount = $state(0);
+	let started = $state(false);
 	let revealed = $state(false);
 	let loading = $state(false);
-	let promptLabel = $state(promptPresets[0].label);
-	let safetyLabel = $state('Family-friendly only');
-	let statusLine = $state('Ready to start a harmless round.');
-	let currentRiddle = $state<Riddle>(pickRiddleForPrompt(promptPresets[0].prompt, 0));
+	let roundError = $state('');
+	let guessInput = $state('');
+	let lockedGuess = $state('');
+	let currentRound = $state<Partial<Riddle> | undefined>(undefined);
 
-	const roundTone = $derived(getPromptTone(promptInput));
-	const promptPreview = $derived(cleanPrompt(promptInput));
-	const canGenerate = $derived(promptPreview.length > 0 && !loading);
-
-	const sleep = (milliseconds: number) =>
-		new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-	async function startRound(nextPrompt = promptInput, preset?: PromptPreset) {
-		const cleanedPrompt = cleanPrompt(nextPrompt);
-		const resolvedPrompt = cleanedPrompt || promptPresets[0].prompt;
-
-		promptInput = resolvedPrompt;
-		promptLabel = preset?.label ?? getPromptTone(resolvedPrompt);
-		loading = true;
-		revealed = false;
-		statusLine = 'Checking the wording and picking a clean seed riddle.';
-		safetyLabel = 'Family-friendly only';
-
-		await sleep(320);
-
-		generationCount += 1;
-
-		if (isUnsafePrompt(resolvedPrompt)) {
-			currentRiddle = fallbackRiddle;
-			promptLabel = 'Family-friendly fallback';
-			safetyLabel = 'Unsafe prompt blocked';
-			statusLine = 'That prompt was too spicy, so a safe backup took the stage.';
-		} else {
-			currentRiddle = pickRiddleForPrompt(resolvedPrompt, generationCount);
-			promptLabel = preset?.label ?? getPromptTone(resolvedPrompt);
-			safetyLabel = 'Family-friendly only';
-			statusLine = resolvedPrompt
-				? `Matched a clean round for ${resolvedPrompt.toLowerCase()}.`
-				: 'Using a curated seed round.';
+	const trimmedGuess = $derived(cleanPrompt(guessInput));
+	const statusCopy = $derived.by(() => {
+		if (loading) {
+			return 'The engine is drafting a suspicious setup.';
 		}
 
-		loading = false;
+		if (roundError) {
+			return roundError;
+		}
+
+		if (!started) {
+			return 'Click start and the AI will deal the first round.';
+		}
+
+		if (revealed) {
+			return 'Answer revealed. Queue another round whenever you are ready.';
+		}
+
+		return currentRound?.statusLine ?? 'Type your guess, then reveal the answer.';
+	});
+
+	async function generateRound() {
+		const nextRound = generationCount + 1;
+
+		started = true;
+		generationCount = nextRound;
+		revealed = false;
+		roundError = '';
+		guessInput = '';
+		lockedGuess = '';
+		loading = true;
+
+		const draft: Partial<Riddle> = {
+			promptLabel: 'The room goes quiet...',
+			safetyLabel: 'AI is writing live',
+			statusLine: 'DeepSeek is writing a new riddle...'
+		};
+
+		currentRound = draft;
+
+		try {
+			const round = await requestRound({
+				prompt: '',
+				round: nextRound,
+				profile: emptyProfile
+			});
+
+			currentRound = round;
+		} catch (error) {
+			roundError = error instanceof Error ? error.message : 'Failed to generate the next riddle.';
+			currentRound = undefined;
+		} finally {
+			loading = false;
+		}
 	}
 
 	function revealAnswer() {
+		lockedGuess = trimmedGuess;
 		revealed = true;
-		statusLine = 'Answer revealed. The room can breathe again.';
 	}
 
-	function shufflePrompt() {
-		const nextPreset = promptPresets[generationCount % promptPresets.length];
-		promptInput = nextPreset.prompt;
-		void startRound(nextPreset.prompt, nextPreset);
-	}
-
-	function applyPreset(preset: PromptPreset) {
-		promptInput = preset.prompt;
-		void startRound(preset.prompt, preset);
-	}
-
-	function handleSubmit(event: SubmitEvent) {
+	function handleGuessSubmit(event: SubmitEvent) {
 		event.preventDefault();
-		void startRound(promptInput);
+
+		if (!currentRound?.answer || loading) {
+			return;
+		}
+
+		revealAnswer();
 	}
 </script>
 
@@ -91,238 +110,240 @@
 	<title>Blushing Riddles</title>
 	<meta
 		name="description"
-		content="A playful party game about clean double-entendre riddles, safe prompts, and quick reveals."
+		content="One-click AI riddles with a simple flow: start, guess, and reveal the harmless answer."
 	/>
 </svelte:head>
 
-<div
-	class="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-4 py-6 sm:px-6 lg:px-8 lg:py-10"
->
-	<section class="grid items-start gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
-		<div class="space-y-6">
+<div class="relative isolate min-h-screen overflow-hidden">
+	<div class="absolute inset-0 bg-background"></div>
+	<div
+		class="absolute inset-0 opacity-20"
+		style="background-image: linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px); background-size: 4.5rem 4.5rem;"
+	></div>
+	<div
+		class="absolute top-18 -left-24 h-72 w-72 rounded-full border border-primary/20 bg-primary/10 blur-3xl"
+	></div>
+	<div
+		class="absolute top-30 right-0 h-80 w-80 rounded-full border border-accent/30 bg-accent/10 blur-3xl"
+	></div>
+
+	{#if !started}
+		<section
+			transition:fade={{ duration: 180 }}
+			class="relative mx-auto flex min-h-[calc(100vh-4.5rem)] w-full max-w-4xl flex-col justify-center gap-8 px-4 py-8 sm:px-6 lg:px-8"
+		>
 			<div class="flex flex-wrap items-center gap-2">
-				<Badge variant="secondary" class="gap-1.5">
+				<Badge
+					variant="secondary"
+					class="gap-1.5 border border-primary/20 bg-primary/10 text-primary"
+				>
 					<Sparkles class="size-3.5" />
-					<span>Clean wordplay only</span>
+					<span>One-click game flow</span>
 				</Badge>
-				<Badge variant="outline" class="gap-1.5">
+				<Badge variant="outline" class="gap-1.5 bg-card/70">
 					<Shield class="size-3.5" />
-					<span>Safe prompts, safe fallback</span>
+					<span>AI-generated and family-friendly</span>
 				</Badge>
 			</div>
 
-			<div class="space-y-4">
-				<h1
-					class="max-w-3xl text-5xl font-semibold tracking-tight text-balance text-foreground sm:text-6xl lg:text-7xl"
-				>
-					Blushing Riddles
+			<div class="space-y-5">
+				<p class="text-xs font-medium tracking-[0.45em] text-muted-foreground uppercase">
+					Blush Banter
+				</p>
+				<h1 class="text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl">
+					One click. One strange setup. One
+					<span class="mt-3 block text-primary">
+						<MorphingText texts={heroWords} class="h-16 text-left sm:h-20" />
+					</span>
+					reveal.
 				</h1>
-				<p class="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-					A cheeky party game where the setup sounds scandalous, the answer stays innocent, and the
-					reveal lands fast.
+				<p class="max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl">
+					No prompt writing. No card flipping. Just start a round, lock your guess, and reveal the
+					harmless answer.
 				</p>
 			</div>
 
-			<div class="flex flex-wrap gap-3">
-				<Button class="gap-2" onclick={shufflePrompt} disabled={loading}>
-					<Sparkles class="size-4" />
-					Start a new round
+			<div
+				class="rounded-[calc(var(--radius)+0.5rem)] border border-border/80 bg-card/75 p-4 shadow-sm backdrop-blur"
+			>
+				<SpecialText
+					text={statusCopy}
+					speed={18}
+					class="text-sm tracking-[0.28em] text-primary uppercase sm:text-base"
+				/>
+			</div>
+
+			<div class="flex flex-col gap-3 sm:flex-row">
+				<Button class="gap-2 px-6" onclick={generateRound} disabled={loading}>
+					{#if loading}
+						<RefreshCw class="size-4 animate-spin" />
+						Summoning a riddle
+					{:else}
+						<Play class="size-4" />
+						Start the first riddle
+					{/if}
 				</Button>
-				<Button variant="secondary" class="gap-2" onclick={revealAnswer} disabled={loading}>
-					<ArrowRight class="size-4" />
-					Skip to the answer
-				</Button>
+				<div
+					class="flex items-center rounded-[calc(var(--radius)+0.4rem)] border border-border/80 bg-card/65 px-4 py-3 text-sm text-muted-foreground shadow-sm"
+				>
+					<Eye class="mr-2 size-4 text-primary" />
+					Answer stays hidden until you reveal.
+				</div>
 			</div>
 
 			<div class="grid gap-3 sm:grid-cols-3">
-				<Card.Root class="border-border/80 bg-card/80 shadow-sm">
-					<Card.Header class="space-y-1.5 py-4">
-						<Card.Title class="text-base">Seed bank</Card.Title>
-						<Card.Description>Curated riddles keep the tone predictable.</Card.Description>
-					</Card.Header>
-				</Card.Root>
-				<Card.Root class="border-border/80 bg-card/80 shadow-sm">
-					<Card.Header class="space-y-1.5 py-4">
-						<Card.Title class="text-base">Reveal loop</Card.Title>
-						<Card.Description>Tap once to flip, tap again to reshuffle.</Card.Description>
-					</Card.Header>
-				</Card.Root>
-				<Card.Root class="border-border/80 bg-card/80 shadow-sm">
-					<Card.Header class="space-y-1.5 py-4">
-						<Card.Title class="text-base">Safety guard</Card.Title>
-						<Card.Description>Unsafe wording falls back to a clean prompt.</Card.Description>
-					</Card.Header>
-				</Card.Root>
+				{#each flowSteps as step, index (step)}
+					<Card.Root class="border-border/80 bg-card/75 shadow-none">
+						<Card.Header class="space-y-2 py-4">
+							<Card.Description class="text-xs tracking-[0.2em] uppercase">
+								Step {index + 1}
+							</Card.Description>
+							<Card.Title class="text-base leading-6">{step}</Card.Title>
+						</Card.Header>
+					</Card.Root>
+				{/each}
 			</div>
-		</div>
 
-		<Card.Root
-			class="border-border/80 bg-card/90 shadow-[0_24px_80px_rgba(61,26,53,0.12)] backdrop-blur-sm"
+			<div
+				class="rounded-[calc(var(--radius)+0.6rem)] border border-border/80 bg-card/70 px-5 py-4 shadow-sm"
+			>
+				<Signature text="Blush Banter" color="var(--color-primary)" class="w-full" />
+			</div>
+		</section>
+	{:else}
+		<div
+			transition:fade={{ duration: 180 }}
+			class="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10"
 		>
-			<Card.Header class="space-y-3 pb-4">
-				<div class="flex flex-wrap items-center gap-2">
-					<Badge variant="outline" class="gap-1.5">
-						<RefreshCw class="size-3.5" />
-						<span>Round flow</span>
-					</Badge>
-					<Badge variant="secondary">{roundTone}</Badge>
+			<header class="flex flex-wrap items-end justify-between gap-4">
+				<div class="space-y-3">
+					<div class="flex flex-wrap items-center gap-2">
+						<Badge variant="secondary" class="gap-1.5 bg-secondary/75">
+							<WandSparkles class="size-3.5" />
+							<span>Round {generationCount}</span>
+						</Badge>
+						<Badge variant="outline" class="gap-1.5 bg-card/70">
+							{revealed ? 'Answer open' : loading ? 'Writing' : 'Guessing'}
+						</Badge>
+					</div>
+					<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Guess before the reveal</h2>
+					<p class="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+						Same flow, cleaner layout: read the setup, type a guess, and reveal when ready.
+					</p>
 				</div>
-				<Card.Title class="text-2xl font-semibold tracking-tight">How the game flows</Card.Title>
-				<Card.Description>
-					Enter a playful prompt, load a clean riddle, then flip the card to reveal the answer.
-				</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="grid gap-4">
-					<div class="flex items-start gap-3">
-						<Badge variant="secondary" class="mt-0.5 min-w-8 justify-center rounded-full px-0"
-							>1</Badge
-						>
-						<div class="space-y-1">
-							<p class="font-medium">Pick a prompt</p>
-							<p class="text-sm leading-6 text-muted-foreground">
-								Use a preset or type your own safe topic.
-							</p>
+
+				<Button class="gap-2" onclick={generateRound} disabled={loading}>
+					{#if loading}
+						<RefreshCw class="size-4 animate-spin" />
+						Drafting
+					{:else}
+						<RefreshCw class="size-4" />
+						New round
+					{/if}
+				</Button>
+			</header>
+
+			<div
+				class="rounded-[calc(var(--radius)+0.5rem)] border border-border/80 bg-card/75 p-4 shadow-sm backdrop-blur"
+			>
+				<SpecialText
+					text={statusCopy}
+					speed={18}
+					class="text-sm tracking-[0.28em] text-primary uppercase sm:text-base"
+				/>
+			</div>
+
+			<section class="grid items-start gap-8 lg:grid-cols-[1.08fr_0.92fr]">
+				<div>
+					<RiddleCard
+						riddle={currentRound}
+						{revealed}
+						{loading}
+						playerGuess={lockedGuess}
+						onReveal={revealAnswer}
+						onShuffle={generateRound}
+					/>
+				</div>
+
+				<Card.Root class="border-border/80 bg-card/80 shadow-sm backdrop-blur">
+					<Card.Header class="space-y-3 pb-4">
+						<div class="flex flex-wrap items-center gap-2">
+							<Badge variant="secondary" class="gap-1.5 bg-secondary/70">
+								<WandSparkles class="size-3.5" />
+								<span>Your guess</span>
+							</Badge>
+							<Badge variant="outline" class="bg-background/70">
+								{currentRound?.topic ?? 'Waiting for a category'}
+							</Badge>
 						</div>
-					</div>
-					<div class="flex items-start gap-3">
-						<Badge variant="secondary" class="mt-0.5 min-w-8 justify-center rounded-full px-0"
-							>2</Badge
+						<Card.Title class="text-2xl font-semibold tracking-tight"
+							>Name the harmless answer</Card.Title
 						>
-						<div class="space-y-1">
-							<p class="font-medium">Load the round</p>
-							<p class="text-sm leading-6 text-muted-foreground">
-								The app selects a matching seed riddle or a safe fallback.
-							</p>
+						<Card.Description>
+							{revealed
+								? 'Round complete. Compare your guess, then queue the next one.'
+								: 'Type your best guess. You can reveal with or without an entry.'}
+						</Card.Description>
+					</Card.Header>
+
+					<Card.Content class="space-y-6">
+						<form class="space-y-4" onsubmit={handleGuessSubmit}>
+							<div class="space-y-2">
+								<label for="guess" class="text-sm leading-none font-medium text-foreground">
+									What do you think it is?
+								</label>
+								<Input
+									id="guess"
+									bind:value={guessInput}
+									placeholder="Type your guess before reveal"
+									disabled={loading || revealed}
+									autocomplete="off"
+								/>
+							</div>
+
+							<div class="flex flex-col gap-3 sm:flex-row">
+								<Button
+									type="submit"
+									class="flex-1 gap-2"
+									disabled={!currentRound?.answer || loading || revealed}
+								>
+									<Eye class="size-4" />
+									Lock guess and reveal
+								</Button>
+								<Button
+									type="button"
+									variant="outline"
+									class="gap-2"
+									onclick={generateRound}
+									disabled={loading}
+								>
+									<RefreshCw class="size-4" />
+									Skip to a fresh round
+								</Button>
+							</div>
+						</form>
+
+						<Separator />
+
+						<div class="grid gap-3 sm:grid-cols-2">
+							<Card.Root class="border-border/70 bg-background/60 shadow-none">
+								<Card.Header class="space-y-2 py-4">
+									<Card.Title class="text-base">Round status</Card.Title>
+									<Card.Description>{statusCopy}</Card.Description>
+								</Card.Header>
+							</Card.Root>
+							<Card.Root class="border-border/70 bg-background/60 shadow-none">
+								<Card.Header class="space-y-2 py-4">
+									<Card.Title class="text-base">Your last entry</Card.Title>
+									<Card.Description>
+										{lockedGuess || trimmedGuess || 'Nothing typed yet.'}
+									</Card.Description>
+								</Card.Header>
+							</Card.Root>
 						</div>
-					</div>
-					<div class="flex items-start gap-3">
-						<Badge variant="secondary" class="mt-0.5 min-w-8 justify-center rounded-full px-0"
-							>3</Badge
-						>
-						<div class="space-y-1">
-							<p class="font-medium">Flip the card</p>
-							<p class="text-sm leading-6 text-muted-foreground">
-								The answer appears with a clean punch line and a tiny wink.
-							</p>
-						</div>
-					</div>
-				</div>
-			</Card.Content>
-			<Card.Footer class="pt-0">
-				<p class="text-sm leading-6 text-muted-foreground">{statusLine}</p>
-			</Card.Footer>
-		</Card.Root>
-	</section>
-
-	<Separator />
-
-	<section class="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-		<RiddleCard
-			riddle={currentRiddle}
-			{revealed}
-			{loading}
-			{promptLabel}
-			{safetyLabel}
-			onReveal={revealAnswer}
-			onShuffle={shufflePrompt}
-		/>
-
-		<Card.Root class="border-border/80 bg-card/90 shadow-sm">
-			<Card.Header class="space-y-3 pb-4">
-				<div class="flex flex-wrap items-center gap-2">
-					<Badge variant="secondary" class="gap-1.5">
-						<Sparkles class="size-3.5" />
-						<span>Prompt studio</span>
-					</Badge>
-					<Badge variant="outline">{promptPreview || 'Ready for a clean prompt'}</Badge>
-				</div>
-				<Card.Title class="text-2xl font-semibold tracking-tight">Write a safe prompt</Card.Title>
-				<Card.Description>
-					Use the presets for a fast start or type your own family-friendly misdirection.
-				</Card.Description>
-			</Card.Header>
-
-			<Card.Content class="space-y-6">
-				<form class="space-y-4" onsubmit={handleSubmit}>
-					<div class="space-y-2">
-						<label for="prompt" class="text-sm leading-none font-medium text-foreground"
-							>Prompt</label
-						>
-						<Input
-							id="prompt"
-							bind:value={promptInput}
-							placeholder="Try 'kitchen gadgets' or 'travel drama'"
-							autocomplete="off"
-						/>
-					</div>
-
-					<div class="flex flex-wrap gap-2">
-						{#each promptPresets as preset (preset.label)}
-							<Button
-								type="button"
-								variant="secondary"
-								class="gap-2"
-								onclick={() => applyPreset(preset)}
-							>
-								<Sparkles class="size-4" />
-								<span>{preset.label}</span>
-							</Button>
-						{/each}
-					</div>
-
-					<div class="flex flex-col gap-3 sm:flex-row">
-						<Button type="submit" class="flex-1 gap-2" disabled={!canGenerate}>
-							{#if loading}
-								<RefreshCw class="size-4 animate-spin" />
-								Generating
-							{:else}
-								<ArrowRight class="size-4" />
-								Generate a clean round
-							{/if}
-						</Button>
-						<Button
-							type="button"
-							variant="outline"
-							class="gap-2"
-							onclick={shufflePrompt}
-							disabled={loading}
-						>
-							<RefreshCw class="size-4" />
-							Randomize
-						</Button>
-					</div>
-				</form>
-
-				<Separator />
-
-				<div class="grid gap-3 sm:grid-cols-2">
-					<Card.Root class="border-border/70 bg-background/70 shadow-none">
-						<Card.Header class="space-y-2 py-4">
-							<Card.Title class="text-base">Safety check</Card.Title>
-							<Card.Description>
-								{#if isUnsafePrompt(promptPreview)}
-									That wording gets replaced with a clean backup.
-								{:else}
-									The prompt stays inside the harmless wordplay lane.
-								{/if}
-							</Card.Description>
-						</Card.Header>
-					</Card.Root>
-					<Card.Root class="border-border/70 bg-background/70 shadow-none">
-						<Card.Header class="space-y-2 py-4">
-							<Card.Title class="text-base">Round status</Card.Title>
-							<Card.Description>
-								{loading
-									? 'Loading a fresh seed...'
-									: revealed
-										? 'Answer open and ready.'
-										: 'Waiting for the reveal.'}
-							</Card.Description>
-						</Card.Header>
-					</Card.Root>
-				</div>
-			</Card.Content>
-		</Card.Root>
-	</section>
+					</Card.Content>
+				</Card.Root>
+			</section>
+		</div>
+	{/if}
 </div>
