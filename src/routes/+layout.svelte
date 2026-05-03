@@ -31,7 +31,7 @@
 	></div>
 	<div class="absolute top-32 -left-24 h-80 w-80 rounded-full bg-secondary/20 blur-3xl"></div>
 
-	<div class="relative z-10 flex min-h-screen flex-col">
+	<div class="relative flex min-h-screen flex-col">
 		<header class="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl">
 			<div class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
 				<div class="flex flex-wrap items-center justify-between gap-3">

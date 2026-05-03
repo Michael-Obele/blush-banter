@@ -6,7 +6,7 @@
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { ArrowRight, Shield, Sparkles, WandSparkles } from '@lucide/svelte';
+	import { ArrowRight } from '@lucide/svelte';
 
 	const heroWords = ['clean', 'dramatic', 'harmless', 'ridiculous'];
 
@@ -60,11 +60,9 @@
 					variant="secondary"
 					class="gap-1.5 border border-primary/20 bg-primary/10 text-primary"
 				>
-					<Sparkles class="size-3.5" />
 					<span>One click to start</span>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/75">
-					<Shield class="size-3.5" />
 					<span>Family-friendly answers</span>
 				</Badge>
 			</div>
@@ -115,11 +113,9 @@
 				<Card.Header class="space-y-3 pb-4">
 					<div class="flex flex-wrap items-center gap-2">
 						<Badge variant="secondary" class="gap-1.5 bg-secondary/80">
-							<WandSparkles class="size-3.5" />
 							<span>Live preview</span>
 						</Badge>
 						<Badge variant="outline" class="gap-1.5 bg-background/70">
-							<Shield class="size-3.5" />
 							<span>Guess first</span>
 						</Badge>
 					</div>
@@ -150,7 +146,6 @@
 					<div
 						class="flex flex-1 items-center rounded-full border border-border/80 bg-background/70 px-4 py-3 text-sm text-muted-foreground"
 					>
-						<Shield class="mr-2 size-4 text-primary" />
 						No prompt box, no fuss, no unsafe reveal.
 					</div>
 				</Card.Footer>
@@ -215,7 +210,6 @@
 			<div
 				class="flex items-center gap-2 rounded-full border border-border/80 bg-background/70 px-4 py-3 text-sm text-muted-foreground"
 			>
-				<Sparkles class="size-4 text-primary" />
 				Signature reveal flow
 			</div>
 		</div>
