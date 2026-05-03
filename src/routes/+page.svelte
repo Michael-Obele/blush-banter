@@ -74,11 +74,16 @@
 				<h1
 					class="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl"
 				>
-					How clean is your mind when the clue sounds dirty?
+					How clean is your mind when the clue sounds
 					<span class="mt-3 block text-primary">
-						<MorphingText texts={heroWords} class="h-16 text-left sm:h-20" />
+						<MorphingText
+							texts={heroWords.map((word) => word + '?')}
+							class="h-16 text-left sm:h-20"
+						/>
 					</span>
-					Can you guess the innocent answer?
+					Can you guess the
+					<span class="stroke-2 line-through decoration-primary/80 decoration-10"> innocent </span>
+					answer?
 				</h1>
 				<p class="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
 					Blush Banter turns the joke into a test of imagination: read a suggestive setup, guess the
