@@ -18,9 +18,9 @@
 	};
 
 	const flowSteps = [
-		'Start a round with one click.',
-		'Read the setup and type your guess.',
-		'Reveal the answer and compare.'
+		'Start a round and test how clean your first thought is.',
+		'Read the clue, guess the innocent answer, and commit.',
+		'Reveal the answer and see if your mind went dirtier than the riddle.'
 	];
 
 	let generationCount = $state(0);
@@ -116,11 +116,12 @@
 			<div class="flex flex-wrap items-center gap-2">
 				<Badge variant="secondary" class="gap-1.5 bg-secondary/75">
 					<WandSparkles class="size-3.5" />
-					<span>{generationCount > 0 ? `Round ${generationCount}` : 'Ready to play'}</span>
+					<span>{generationCount > 0 ? `Round ${generationCount}` : 'Ready to test your mind'}</span
+					>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/70">
 					<Shield class="size-3.5" />
-					<span>Family-safe</span>
+					<span>All innocent answers</span>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/70">
 					{revealed ? 'Answer open' : loading ? 'Writing' : 'Guessing'}
@@ -128,11 +129,14 @@
 			</div>
 			<div class="space-y-2">
 				<p class="text-xs font-medium tracking-[0.45em] text-muted-foreground uppercase">
-					Guess before the reveal
+					How clean is your mind?
 				</p>
-				<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Lock the guess first.</h1>
+				<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
+					Guess the innocent question before the reveal.
+				</h1>
 				<p class="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-					Read the setup, type your best guess, then reveal the answer when you are ready.
+					Read the playful setup, type your best guess, and find out whether your mind went clean or
+					dirty.
 				</p>
 			</div>
 		</div>
@@ -142,15 +146,15 @@
 				href="/"
 				class="inline-flex h-11 items-center justify-center rounded-full border border-border/80 bg-card/80 px-5 text-sm font-medium text-foreground transition-colors hover:border-primary/20 hover:bg-primary/5"
 			>
-				Back home
+				Back to the setup
 			</a>
 			<Button class="gap-2 px-5" onclick={generateRound} disabled={loading}>
 				{#if loading}
 					<RefreshCw class="size-4 animate-spin" />
-					Summoning a riddle
+					Summoning an innocent clue
 				{:else}
 					<Eye class="size-4" />
-					Start the first riddle
+					Start the test
 				{/if}
 			</Button>
 		</div>
@@ -183,18 +187,18 @@
 				<div class="flex flex-wrap items-center gap-2">
 					<Badge variant="secondary" class="gap-1.5 bg-secondary/70">
 						<WandSparkles class="size-3.5" />
-						<span>Your guess</span>
+						<span>Your clean guess</span>
 					</Badge>
 					<Badge variant="outline" class="bg-background/70">
-						{currentRound?.topic ?? 'Waiting for a category'}
+						{currentRound?.topic ?? 'Waiting for an innocent category'}
 					</Badge>
 				</div>
 				<Card.Title class="text-2xl font-semibold tracking-tight"
-					>Name the harmless answer</Card.Title
+					>Name the innocent answer</Card.Title
 				>
 				<Card.Description>
 					{revealed
-						? 'Round complete. Compare your guess, then play again.'
+						? 'Round complete. Compare your guess, then try another one.'
 						: 'Type your best guess. You can reveal with or without an entry.'}
 				</Card.Description>
 			</Card.Header>
@@ -203,7 +207,7 @@
 				<form class="space-y-4" onsubmit={handleGuessSubmit}>
 					<div class="space-y-3">
 						<label for="guess" class="my-2 text-sm leading-none font-medium text-foreground">
-							What do you think it is?
+							What innocent answer are you seeing?
 						</label>
 						<div class="flex gap-2">
 							<Input
@@ -254,7 +258,7 @@
 						<Card.Root class="border-border/70 bg-background/60 shadow-none">
 							<Card.Header class="space-y-2 py-4">
 								<Card.Description class="text-xs tracking-[0.2em] uppercase">
-									Step {index + 1}
+									Clue {index + 1}
 								</Card.Description>
 								<Card.Title class="text-base leading-6">{step}</Card.Title>
 							</Card.Header>

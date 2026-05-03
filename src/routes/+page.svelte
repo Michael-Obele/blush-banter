@@ -8,20 +8,20 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { ArrowRight } from '@lucide/svelte';
 
-	const heroWords = ['clean', 'dramatic', 'harmless', 'ridiculous'];
+	const heroWords = ['clean', 'dirty', 'innocent', 'harmless'];
 
 	const highlights = [
 		{
-			title: 'Instant start',
-			text: 'One tap launches a fresh round with no prompt writing or setup screens.'
+			title: 'Spot the hint',
+			text: 'Each round starts with a setup that sounds cheeky, but the answer stays innocent.'
 		},
 		{
-			title: 'Guess first',
-			text: 'Read the setup, lock your hunch, then compare it to the reveal.'
+			title: 'Clean or dirty mind?',
+			text: 'See how fast your brain wanders, then bring it back to the harmless answer.'
 		},
 		{
-			title: 'Harmless punch lines',
-			text: 'Every answer stays family-friendly and the joke stays on the safe side.'
+			title: 'Always innocent',
+			text: 'The joke lives in the misdirection, not in anything explicit.'
 		}
 	];
 
@@ -29,17 +29,17 @@
 		{
 			label: 'Step 1',
 			title: 'Open the game',
-			copy: 'Jump into the dedicated guess page and start a new round.'
+			copy: 'Jump into the guessing room and see how clean your first instinct is.'
 		},
 		{
 			label: 'Step 2',
 			title: 'Make the call',
-			copy: 'Read the clue, type your guess, and commit before the reveal.'
+			copy: 'Read the playful clue, type your guess, and commit before the reveal.'
 		},
 		{
 			label: 'Step 3',
 			title: 'Reveal the answer',
-			copy: 'Compare your guess with the harmless punch line.'
+			copy: 'Compare your guess with the innocent punch line and see if your mind was too dirty.'
 		}
 	];
 </script>
@@ -74,15 +74,15 @@
 				<h1
 					class="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl"
 				>
-					A playful riddle game with a
+					How clean is your mind when the clue sounds dirty?
 					<span class="mt-3 block text-primary">
 						<MorphingText texts={heroWords} class="h-16 text-left sm:h-20" />
 					</span>
-					reveal.
+					Can you guess the innocent answer?
 				</h1>
 				<p class="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-					Blush Banter keeps the setup clean: start a round, make your guess, and reveal the
-					harmless answer when you are ready.
+					Blush Banter turns the joke into a test of imagination: read a suggestive setup, guess the
+					harmless answer, and find out whether your mind stayed clean or drifted dirty.
 				</p>
 			</div>
 
@@ -119,9 +119,12 @@
 							<span>Guess first</span>
 						</Badge>
 					</div>
-					<Card.Title class="text-2xl font-semibold tracking-tight">How a round feels</Card.Title>
+					<Card.Title class="text-2xl font-semibold tracking-tight">
+						Can you keep it clean?
+					</Card.Title>
 					<Card.Description>
-						Three beats, one reveal, and no prompt editing in between.
+						Every round starts innocent and ends with a reveal that checks how dirty your first
+						thought got.
 					</Card.Description>
 				</Card.Header>
 
@@ -141,12 +144,12 @@
 						href="/guess"
 						class="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
 					>
-						Open the guess page
+						Test your mind
 					</a>
 					<div
 						class="flex flex-1 items-center rounded-full border border-border/80 bg-background/70 px-4 py-3 text-sm text-muted-foreground"
 					>
-						No prompt box, no fuss, no unsafe reveal.
+						Only innocent answers. The dirt is in the guessing.
 					</div>
 				</Card.Footer>
 			</Card.Root>
@@ -174,7 +177,7 @@
 				How it works
 			</p>
 			<h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-				A short path from setup to reveal.
+				Can you guess the innocent answer before the reveal?
 			</h2>
 		</div>
 
@@ -197,13 +200,13 @@
 		<div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
 			<div class="space-y-1">
 				<SpecialText
-					text="The answer stays hidden until you choose to reveal it."
+					text="The answer stays innocent, even if your mind does not."
 					speed={18}
 					class="text-sm tracking-[0.28em] text-primary uppercase sm:text-base"
 				/>
 				<p class="max-w-2xl text-sm leading-6 text-muted-foreground">
-					Everything is designed to feel quick, playful, and easy to read on both desktop and
-					mobile.
+					Everything is designed to feel quick, playful, and a little suggestive without crossing
+					into explicit territory.
 				</p>
 			</div>
 
