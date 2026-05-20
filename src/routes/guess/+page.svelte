@@ -164,7 +164,7 @@
 		<SpecialText
 			text={statusCopy}
 			speed={18}
-			class="text-sm tracking-[0.28em] text-primary uppercase sm:text-base"
+			class="h-auto text-sm tracking-[0.28em] whitespace-pre-wrap text-primary uppercase sm:text-base"
 		/>
 	</div>
 
