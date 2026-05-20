@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { cn } from "$lib/utils";
-	import { inView as observeInView } from "motion-sv";
-	import { untrack } from "svelte";
-	import type { Snippet } from "svelte";
-	import type { HTMLAttributes } from "svelte/elements";
+	import { cn } from '$lib/utils';
+	import { inView as observeInView } from 'motion-sv';
+	import { untrack } from 'svelte';
+	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
 
 	interface SpecialTextProps extends HTMLAttributes<HTMLSpanElement> {
 		children?: Snippet;
@@ -15,8 +15,8 @@
 		once?: boolean;
 	}
 
-	const RANDOM_CHARS = "_!X$0-+*#";
-	const NBSP = "\u00A0";
+	const RANDOM_CHARS = '_!X$0-+*#';
+	const NBSP = '\u00A0';
 
 	let {
 		children,
@@ -31,16 +31,16 @@
 
 	let container = $state<HTMLSpanElement | null>(null);
 	let contentProbe = $state<HTMLSpanElement | null>(null);
-	let slottedText = $state("");
+	let slottedText = $state('');
 	let isInViewport = $state(false);
 	let hasStarted = $state(false);
-	let displayText = $state("");
-	let currentPhase = $state<"phase1" | "phase2">("phase1");
+	let displayText = $state('');
+	let currentPhase = $state<'phase1' | 'phase2'>('phase1');
 	let animationStep = $state(0);
 
 	let intervalId: ReturnType<typeof setInterval> | null = null;
 	let startTimeoutId: ReturnType<typeof setTimeout> | null = null;
-	let previousSourceText = "";
+	let previousSourceText = '';
 
 	const sourceText = $derived(text ?? slottedText);
 
@@ -80,11 +80,11 @@
 		clearStartTimeout();
 		clearAnimationInterval();
 		hasStarted = false;
-		currentPhase = "phase1";
+		currentPhase = 'phase1';
 		animationStep = 0;
 
 		if (options?.clearDisplay) {
-			displayText = "";
+			displayText = '';
 			return;
 		}
 
@@ -102,21 +102,25 @@
 		const chars: string[] = [];
 
 		for (let index = 0; index < currentLength; index += 1) {
-			chars.push(getRandomChar(index > 0 ? chars[index - 1] : undefined));
+			if (sourceText[index] === ' ') {
+				chars.push(' ');
+			} else {
+				chars.push(getRandomChar(index > 0 ? chars[index - 1] : undefined));
+			}
 		}
 
 		for (let index = currentLength; index < sourceText.length; index += 1) {
-			chars.push(NBSP);
+			chars.push(sourceText[index] === ' ' ? ' ' : NBSP);
 		}
 
-		displayText = chars.join("");
+		displayText = chars.join('');
 
 		if (animationStep < maxSteps - 1) {
 			animationStep += 1;
 			return;
 		}
 
-		currentPhase = "phase2";
+		currentPhase = 'phase2';
 		animationStep = 0;
 	}
 
@@ -129,14 +133,22 @@
 		}
 
 		if (revealedCount < sourceText.length) {
-			chars.push(animationStep % 2 === 0 ? "_" : getRandomChar());
+			if (sourceText[revealedCount] === ' ') {
+				chars.push(' ');
+			} else {
+				chars.push(animationStep % 2 === 0 ? '_' : getRandomChar());
+			}
 		}
 
 		for (let index = chars.length; index < sourceText.length; index += 1) {
-			chars.push(getRandomChar());
+			if (sourceText[index] === ' ') {
+				chars.push(' ');
+			} else {
+				chars.push(getRandomChar());
+			}
 		}
 
-		displayText = chars.join("");
+		displayText = chars.join('');
 
 		if (animationStep < sourceText.length * 2 - 1) {
 			animationStep += 1;
@@ -149,14 +161,14 @@
 
 	$effect(() => {
 		if (text || !contentProbe) {
-			slottedText = "";
+			slottedText = '';
 			return;
 		}
 
 		const probe = contentProbe;
 
 		const syncText = () => {
-			slottedText = probe.textContent?.replace(/\r?\n/g, "") ?? "";
+			slottedText = probe.textContent?.replace(/\r?\n/g, '') ?? '';
 		};
 
 		syncText();
@@ -184,7 +196,7 @@
 					};
 				}
 			},
-			{ margin: "-100px" }
+			{ margin: '-100px' }
 		);
 
 		return () => stop();
@@ -252,7 +264,7 @@
 
 		clearAnimationInterval();
 		intervalId = setInterval(() => {
-			if (currentPhase === "phase1") {
+			if (currentPhase === 'phase1') {
 				runPhase1();
 				return;
 			}
@@ -273,7 +285,7 @@
 
 <span
 	bind:this={container}
-	class={cn("inline-flex h-4.5 font-mono leading-5 font-medium whitespace-pre", className)}
+	class={cn('inline-block min-h-4.5 font-mono leading-5 font-medium whitespace-pre', className)}
 	{...props}
 >
 	<span aria-hidden="true">{displayText}</span>

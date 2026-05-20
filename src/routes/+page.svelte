@@ -206,7 +206,7 @@
 				<SpecialText
 					text="The answer is always innocent. The dirt is in your head."
 					speed={18}
-					class="text-sm tracking-[0.28em] text-primary uppercase sm:text-base"
+					class="h-auto text-sm tracking-[0.28em] whitespace-pre-wrap text-primary uppercase sm:text-base"
 				/>
 				<p class="max-w-2xl text-sm leading-6 text-muted-foreground">
 					Designed to be quick, highly suggestive, and perfect for revealing who in your group has
@@ -214,17 +214,17 @@
 				</p>
 			</div>
 
-			<div
+			<!-- <div
 				class="flex items-center gap-2 rounded-full border border-border/80 bg-background/70 px-4 py-3 text-sm text-muted-foreground"
 			>
 				Signature reveal flow
-			</div>
+			</div> -->
 		</div>
 	</section>
 
-	<div
+	<!-- <div
 		class="rounded-[calc(var(--radius)+0.6rem)] border border-border/80 bg-card/70 px-5 py-4 shadow-sm"
 	>
 		<Signature text="Blush Banter" color="var(--color-primary)" class="w-full" />
-	</div>
+	</div> -->
 </section>
