@@ -10,6 +10,11 @@ import {
 	type Riddle
 } from '$lib/data/riddles';
 
+export const DEEPSEEK_RIDDLE_MODEL = 'deepseek-v4-pro';
+
+export const RIDDLE_SYSTEM_PROMPT =
+	'You write original, family-friendly riddles for a playful party game. Keep them concise, cheeky, and harmless. Favor novelty over stock innuendo templates, vary the object choice and sentence rhythm, and avoid repeated openings or repeated clue patterns. Return exactly one JSON object that matches the requested schema with no markdown or extra commentary.';
+
 const deepseek = createDeepSeek({
 	apiKey: DEEPSEEK_API_KEY
 });
@@ -75,14 +80,108 @@ type GenerationInput = {
 	profile: PersonalizationProfile;
 };
 
-const starterPrompts = [
-	'Make it about a household object with a flirty wink, playful misdirection, and a harmless reveal.',
-	'Make it about a travel item that sounds like trouble but ends in a clean, clever punchline.',
-	'Make it about an office tool with cheeky confidence, a teasing setup, and an innocent answer.',
-	'Make it about a kitchen gadget that acts suspiciously smooth but resolves into a simple joke.',
-	'Make it about a party object with mischievous energy, quick wit, and a family-friendly finish.',
-	'Make it about a garden item with sly wording, a little tension, and a harmless payoff.'
+const fallbackTopics = [
+	'a household object',
+	'a travel accessory',
+	'an office tool',
+	'a kitchen gadget',
+	'a party item',
+	'a garden tool',
+	'a closet staple',
+	'a bathroom essential',
+	'a desk accessory',
+	'a picnic item',
+	'a hobby supply',
+	'a cleaning tool'
 ];
+
+const fallbackFrames = [
+	'a flirty wink and playful misdirection',
+	'cheeky confidence and a clean punchline',
+	'sly wording and a harmless reveal',
+	'mischievous banter and a tidy payoff',
+	'a teasing setup and an innocent answer',
+	'quick wit and a family-friendly finish'
+];
+
+const fallbackPayoffs = [
+	'Keep the answer ordinary and unexpected.',
+	'Let the clue sharpen the misdirection instead of explaining it away.',
+	'Make the explanation feel clever, not repetitive.',
+	'Use a fresh angle instead of a familiar dirty-joke fakeout.',
+	'Keep the rhythm punchy enough to fit on a short card.',
+	'Land on a harmless object with a wink, not a shock reveal.'
+];
+
+const subjectDomains = [
+	'home and decor',
+	'travel and transit',
+	'work and study',
+	'kitchen and dining',
+	'parties and hosting',
+	'gardening and outdoors',
+	'closet and laundry',
+	'bath and self-care',
+	'crafts and hobbies',
+	'cleaning and chores'
+];
+
+const framingStyles = [
+	'confident and self-assured',
+	'mock-suspicious and dramatic',
+	'smooth and charming',
+	'fast and punchy',
+	'playfully competitive',
+	'deadpan with a wink'
+];
+
+const openingStyles = [
+	'start with a bold claim',
+	'start with a suspicious-sounding action',
+	'start with a playful brag',
+	'start with a misleading description',
+	'start with a mock confession',
+	'start with a scene-setting image'
+];
+
+const clueStyles = [
+	'keep the clue tactile and concrete',
+	'keep the clue short and image-driven',
+	'keep the clue contrastive',
+	'keep the clue sly but clean',
+	'keep the clue practical',
+	'keep the clue crisp and literal'
+];
+
+const bannedPatterns = [
+	'avoid stock openings like "I may sound naughty" or "I seem dirty"',
+	'avoid reusing a setup based on going in and out of something',
+	'avoid reusing a setup based on getting wet, hot, or messy',
+	'avoid reusing a setup based on being handled all night long',
+	'avoid repeating the same rhythm in the prompt, clue, and explanation',
+	'avoid repeating a familiar bait-and-switch from earlier party riddles'
+];
+
+type VariationProfile = {
+	subjectDomain: string;
+	framingStyle: string;
+	openingStyle: string;
+	clueStyle: string;
+	bannedPattern: string;
+};
+
+const pickByRound = (values: string[], round: number, multiplier: number, offset = 0) => {
+	const index = Math.abs(round * multiplier + offset) % values.length;
+	return values[index];
+};
+
+const buildVariationProfile = (round: number): VariationProfile => ({
+	subjectDomain: pickByRound(subjectDomains, round, 3, 1),
+	framingStyle: pickByRound(framingStyles, round, 5, 2),
+	openingStyle: pickByRound(openingStyles, round, 7, 3),
+	clueStyle: pickByRound(clueStyles, round, 11, 4),
+	bannedPattern: pickByRound(bannedPatterns, round, 13, 5)
+});
 
 const resolveGenerationPrompt = (prompt: string, round: number) => {
 	const cleanedPrompt = cleanPrompt(prompt);
@@ -91,8 +190,11 @@ const resolveGenerationPrompt = (prompt: string, round: number) => {
 		return cleanedPrompt;
 	}
 
-	const index = Math.abs(round) % starterPrompts.length;
-	return starterPrompts[index];
+	const topic = pickByRound(fallbackTopics, round, 3, 1);
+	const frame = pickByRound(fallbackFrames, round, 5, 2);
+	const payoff = pickByRound(fallbackPayoffs, round, 7, 3);
+
+	return `Make it about ${topic} with ${frame}. ${payoff}`;
 };
 
 const buildProfileNote = (profile: PersonalizationProfile) => {
@@ -111,23 +213,34 @@ export const buildRiddlePrompt = ({ prompt, round, profile }: GenerationInput) =
 	const vibe = cleanPrompt(profile.vibe) || 'playful and clean';
 	const favoriteTopics =
 		cleanPrompt(profile.favoriteTopics) || 'everyday objects and harmless misdirection';
+	const variation = buildVariationProfile(round);
 
-	return `Create one original, family-friendly riddle as structured JSON.
+	return `Create one original, family-friendly riddle card as structured JSON.
 
+<context>
 User prompt: ${cleanedPrompt}
 User profile: ${buildProfileNote(profile)}
 Round: ${round}
+</context>
 
-Requirements:
-- Make the setup sound flirtatious, mischievous, and a little dramatic, but never explicit.
-- Keep the joke-forward energy high; the payoff should feel like a wink, not a reveal.
+<hard_constraints>
+- Keep the setup flirtatious, mischievous, and a little dramatic, but never explicit.
 - The answer must be a harmless, ordinary thing with no sexual, anatomical, or explicit references.
 - Personalize the wording for ${displayName} with a ${vibe} tone.
 - Use the user's favorite topics when it helps, especially ${favoriteTopics}.
 - Keep the riddle concise, punchy, and easy to read on a card.
-- Favor playful double meaning, teasing banter, and clever misdirection over crude wording.
+</hard_constraints>
 
-Field guidance:
+<novelty_targets>
+- Choose an answer from the ${variation.subjectDomain} space unless the user prompt strongly points elsewhere.
+- Use a ${variation.framingStyle} voice and ${variation.openingStyle}.
+- ${variation.clueStyle}.
+- Favor a fresh misdirection angle instead of a familiar dirty-joke fakeout.
+- ${variation.bannedPattern}.
+- Do not repeat the same phrase family across prompt, clue, and explanation.
+</novelty_targets>
+
+<field_guidance>
 - topic: a short category name.
 - promptLabel: a short label for the card header.
 - safetyLabel: a short badge that signals the riddle is AI-generated.
@@ -136,7 +249,8 @@ Field guidance:
 - clue: one brief clue.
 - explanation: one or two sentences that explain the answer.
 - difficulty: easy, medium, or hard.
-- statusLine: one friendly status sentence for the UI.`;
+- statusLine: one friendly status sentence for the UI.
+</field_guidance>`;
 };
 
 export async function buildRound(input: GenerationInput): Promise<Riddle> {
@@ -148,10 +262,9 @@ export async function buildRound(input: GenerationInput): Promise<Riddle> {
 
 	try {
 		const { output } = await generateText({
-			model: deepseek('deepseek-chat'),
+			model: deepseek(DEEPSEEK_RIDDLE_MODEL),
 			output: Output.object({ schema: riddleOutputSchema }),
-			system:
-				'You are a playful riddle writer. Generate family-friendly riddles with flirtatious, mischievous, joke-forward energy, but never explicit or sexual. Keep the subtext light, the answer harmless, and the punchline clever.',
+			system: RIDDLE_SYSTEM_PROMPT,
 			prompt: buildRiddlePrompt(input)
 		});
 

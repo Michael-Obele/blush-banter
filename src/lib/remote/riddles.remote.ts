@@ -1,6 +1,6 @@
 import { command } from '$app/server';
 import * as v from 'valibot';
-import { buildRound, buildRiddlePrompt } from '$lib/server/riddle-engine';
+import { buildRound, buildRiddlePrompt, DEEPSEEK_RIDDLE_MODEL } from '$lib/server/riddle-engine';
 
 const roundRequestSchema = v.object({
 	prompt: v.string(),
@@ -17,7 +17,7 @@ export const generateRound = command(roundRequestSchema, async (request) => {
 
 	console.log('[riddle remote] ai request', {
 		request,
-		model: 'deepseek-chat',
+		model: DEEPSEEK_RIDDLE_MODEL,
 		prompt: aiPrompt
 	});
 

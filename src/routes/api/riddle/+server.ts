@@ -2,7 +2,11 @@ import { deepseek } from '@ai-sdk/deepseek';
 import { streamText } from 'ai';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
-import { buildRiddlePrompt } from '$lib/server/riddle-engine';
+import {
+	buildRiddlePrompt,
+	DEEPSEEK_RIDDLE_MODEL,
+	RIDDLE_SYSTEM_PROMPT
+} from '$lib/server/riddle-engine';
 
 const generationRequestSchema = v.object({
 	prompt: v.string(),
@@ -36,14 +40,13 @@ export const POST = async ({ request }) => {
 
 	console.log('[riddle api] ai request', {
 		request: requestPayload,
-		model: 'deepseek-chat',
+		model: DEEPSEEK_RIDDLE_MODEL,
 		prompt: aiPrompt
 	});
 
 	const result = streamText({
-		model: deepseek('deepseek-chat'),
-		system:
-			'You are a playful riddle writer. Generate family-friendly riddles with a cheeky setup and a harmless answer.',
+		model: deepseek(DEEPSEEK_RIDDLE_MODEL),
+		system: RIDDLE_SYSTEM_PROMPT,
 		prompt: aiPrompt,
 		onError({ error: streamError }) {
 			console.error('[riddle api] ai stream error', streamError);
