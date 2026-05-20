@@ -9,7 +9,7 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { cleanPrompt, type PersonalizationProfile, type Riddle } from '$lib/data/riddles';
 	import { generateRound as requestRound } from '$lib/remote';
-	import { Eye, RefreshCw, Shield, WandSparkles } from '@lucide/svelte';
+	import { Eye, RefreshCw } from '@lucide/svelte';
 
 	const emptyProfile: PersonalizationProfile = {
 		name: '',
@@ -18,9 +18,9 @@
 	};
 
 	const flowSteps = [
-		'Start a round and test how clean your first thought is.',
-		'Read the clue, guess the innocent answer, and commit.',
-		'Reveal the answer and see if your mind went dirtier than the riddle.'
+		'Start a round and test how dirty your mind really is.',
+		'Read the suggestive clue, guess the innocent answer, and commit.',
+		'Reveal the answer and see if your mind went straight to the gutter.'
 	];
 
 	let generationCount = $state(0);
@@ -115,12 +115,10 @@
 		<div class="space-y-3">
 			<div class="flex flex-wrap items-center gap-2">
 				<Badge variant="secondary" class="gap-1.5 bg-secondary/75">
-					<WandSparkles class="size-3.5" />
 					<span>{generationCount > 0 ? `Round ${generationCount}` : 'Ready to test your mind'}</span
 					>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/70">
-					<Shield class="size-3.5" />
 					<span>All innocent answers</span>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/70">
@@ -129,14 +127,14 @@
 			</div>
 			<div class="space-y-2">
 				<p class="text-xs font-medium tracking-[0.45em] text-muted-foreground uppercase">
-					How clean is your mind?
+					How dirty is your mind?
 				</p>
 				<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-					Guess the innocent question before the reveal.
+					Guess the innocent answer before the reveal.
 				</h1>
 				<p class="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-					Read the playful setup, type your best guess, and find out whether your mind went clean or
-					dirty.
+					Read the suggestive setup, type your best guess, and find out whether your mind stayed
+					clean or drifted dirty.
 				</p>
 			</div>
 		</div>
@@ -151,7 +149,7 @@
 			<Button class="gap-2 px-5" onclick={generateRound} disabled={loading}>
 				{#if loading}
 					<RefreshCw class="size-4 animate-spin" />
-					Summoning an innocent clue
+					Summoning a scandalous clue
 				{:else}
 					<Eye class="size-4" />
 					Start the test
@@ -186,11 +184,10 @@
 			<Card.Header class="space-y-3 pb-4">
 				<div class="flex flex-wrap items-center gap-2">
 					<Badge variant="secondary" class="gap-1.5 bg-secondary/70">
-						<WandSparkles class="size-3.5" />
-						<span>Your clean guess</span>
+						<span>Your filthy guess</span>
 					</Badge>
 					<Badge variant="outline" class="bg-background/70">
-						{currentRound?.topic ?? 'Waiting for an innocent category'}
+						{currentRound?.topic ?? 'Waiting for a suggestive category'}
 					</Badge>
 				</div>
 				<Card.Title class="text-2xl font-semibold tracking-tight"

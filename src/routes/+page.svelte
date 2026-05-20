@@ -8,38 +8,38 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { ArrowRight } from '@lucide/svelte';
 
-	const heroWords = ['clean', 'dirty', 'innocent', 'harmless'];
+	const heroWords = ['suggestive', 'scandalous', 'dirty', 'filthy'];
 
 	const highlights = [
 		{
-			title: 'Spot the hint',
-			text: 'Each round starts with a setup that sounds cheeky, but the answer stays innocent.'
+			title: 'Suggestive setups',
+			text: 'Each round starts with a clue that sounds highly inappropriate.'
 		},
 		{
-			title: 'Clean or dirty mind?',
-			text: 'See how fast your brain wanders, then bring it back to the harmless answer.'
+			title: 'Lock in your guess',
+			text: 'Read the clue, assume the worst, and commit to your answer.'
 		},
 		{
-			title: 'Always innocent',
-			text: 'The joke lives in the misdirection, not in anything explicit.'
+			title: 'Innocent reveals',
+			text: 'The answer is always harmless. The joke is entirely on you and your dirty mind.'
 		}
 	];
 
 	const flowSteps = [
 		{
 			label: 'Step 1',
-			title: 'Open the game',
-			copy: 'Jump into the guessing room and see how clean your first instinct is.'
+			title: 'Start a round',
+			copy: 'Jump into the game and read a clue that sounds completely wrong.'
 		},
 		{
 			label: 'Step 2',
-			title: 'Make the call',
-			copy: 'Read the playful clue, type your guess, and commit before the reveal.'
+			title: 'Take a guess',
+			copy: 'Lock in what you think the answer is before the reveal.'
 		},
 		{
 			label: 'Step 3',
-			title: 'Reveal the answer',
-			copy: 'Compare your guess with the innocent punch line and see if your mind was too dirty.'
+			title: 'Face the truth',
+			copy: 'See the innocent answer and realize your mind was just in the gutter.'
 		}
 	];
 </script>
@@ -60,10 +60,10 @@
 					variant="secondary"
 					class="gap-1.5 border border-primary/20 bg-primary/10 text-primary"
 				>
-					<span>One click to start</span>
+					<span>Adult party game</span>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/75">
-					<span>Family-friendly answers</span>
+					<span>Innocent answers</span>
 				</Badge>
 			</div>
 
@@ -74,10 +74,10 @@
 				<h1
 					class="max-w-4xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl lg:text-7xl"
 				>
-					How clean is your mind when the clue sounds
+					A game that tests how dirty your mind is when the clue sounds
 					<span class="mt-3 block text-primary">
 						<MorphingText
-							texts={heroWords.map((word) => word + '?')}
+							texts={heroWords.map((word) => word + '.')}
 							class="h-16 text-left sm:h-20"
 						/>
 					</span>
@@ -86,8 +86,8 @@
 					answer?
 				</h1>
 				<p class="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-					Blush Banter turns the joke into a test of imagination: read a suggestive setup, guess the
-					harmless answer, and find out whether your mind stayed clean or drifted dirty.
+					Blush Banter keeps it simple: read a highly suggestive setup, lock in your guess, and
+					reveal a completely harmless answer. The dirt is entirely in your head.
 				</p>
 			</div>
 
@@ -125,16 +125,15 @@
 						</Badge>
 					</div>
 					<Card.Title class="text-2xl font-semibold tracking-tight">
-						Can you keep it clean?
+						How dirty is your mind?
 					</Card.Title>
 					<Card.Description>
-						Every round starts innocent and ends with a reveal that checks how dirty your first
-						thought got.
+						Every round starts with a scandalous setup and ends with an innocent reveal.
 					</Card.Description>
 				</Card.Header>
 
 				<Card.Content class="space-y-3">
-					{#each [{ label: 'Setup', copy: 'A suspicious clue appears and the room gets quieter.' }, { label: 'Guess', copy: 'You lock in the answer before the punch line lands.' }, { label: 'Reveal', copy: 'The harmless answer shows up with a small wink.' }] as row (row.label)}
+					{#each [{ label: 'Setup', copy: 'A highly suggestive clue makes everyone assume the worst.' }, { label: 'Guess', copy: 'You lock in your filthy answer before the truth lands.' }, { label: 'Reveal', copy: 'A completely innocent answer shows up, exposing your dirty mind.' }] as row (row.label)}
 						<div class="rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
 							<p class="text-xs font-medium tracking-[0.28em] text-muted-foreground uppercase">
 								{row.label}
@@ -182,7 +181,7 @@
 				How it works
 			</p>
 			<h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-				Can you guess the innocent answer before the reveal?
+				Will you guess the innocent answer, or assume the worst?
 			</h2>
 		</div>
 
@@ -205,13 +204,13 @@
 		<div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
 			<div class="space-y-1">
 				<SpecialText
-					text="The answer stays innocent, even if your mind does not."
+					text="The answer is always innocent. The dirt is in your head."
 					speed={18}
 					class="text-sm tracking-[0.28em] text-primary uppercase sm:text-base"
 				/>
 				<p class="max-w-2xl text-sm leading-6 text-muted-foreground">
-					Everything is designed to feel quick, playful, and a little suggestive without crossing
-					into explicit territory.
+					Designed to be quick, highly suggestive, and perfect for revealing who in your group has
+					the dirtiest mind.
 				</p>
 			</div>
 
