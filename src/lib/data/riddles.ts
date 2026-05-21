@@ -16,6 +16,12 @@ export type PersonalizationProfile = {
 	favoriteTopics: string;
 };
 
+export const EMPTY_PROFILE: PersonalizationProfile = {
+	name: '',
+	vibe: '',
+	favoriteTopics: ''
+};
+
 const unsafeTerms = [
 	'sexual',
 	'sex',
@@ -32,6 +38,20 @@ const unsafeTerms = [
 ];
 
 export const cleanPrompt = (value: string) => value.trim().replace(/\s+/g, ' ');
+
+export const normalizeProfile = (
+	profile?: Partial<PersonalizationProfile> | null
+): PersonalizationProfile => ({
+	name: cleanPrompt(profile?.name ?? ''),
+	vibe: cleanPrompt(profile?.vibe ?? ''),
+	favoriteTopics: cleanPrompt(profile?.favoriteTopics ?? '')
+});
+
+export const hasProfileDetails = (profile?: Partial<PersonalizationProfile> | null) => {
+	const normalized = normalizeProfile(profile);
+
+	return Boolean(normalized.name || normalized.vibe || normalized.favoriteTopics);
+};
 
 export const isUnsafePrompt = (value: string) => {
 	const normalized = cleanPrompt(value).toLowerCase();

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import ProfileSheet from '$lib/components/profile-sheet.svelte';
+	import ProfileSummaryCard from '$lib/components/profile-summary-card.svelte';
 	import RiddleCard from '$lib/components/riddle-card.svelte';
 	import { SpecialText } from '$lib/components/spell/special-text/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -7,21 +9,28 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { cleanPrompt, type PersonalizationProfile, type Riddle } from '$lib/data/riddles';
+	import {
+		cleanPrompt,
+		hasProfileDetails,
+		normalizeProfile,
+		type PersonalizationProfile,
+		type Riddle
+	} from '$lib/data/riddles';
+	import { db, PROFILE_RECORD_ID, type SavedProfile } from '$lib/db';
 	import { generateRound as requestRound } from '$lib/remote';
 	import { Eye, RefreshCw } from '@lucide/svelte';
-
-	const emptyProfile: PersonalizationProfile = {
-		name: '',
-		vibe: '',
-		favoriteTopics: ''
-	};
 
 	const flowSteps = [
 		'Start a round and test how dirty your mind really is.',
 		'Read the suggestive clue, guess the innocent answer, and commit.',
 		'Reveal the answer and see if your mind went straight to the gutter.'
 	];
+
+	const profileQuery = db.profile.liveGet(PROFILE_RECORD_ID);
+	const activeProfile = $derived.by(() =>
+		normalizeProfile(profileQuery.current as SavedProfile | undefined)
+	);
+	const hasSavedProfile = $derived(hasProfileDetails(activeProfile));
 
 	let generationCount = $state(0);
 	let revealed = $state(false);
@@ -30,8 +39,21 @@
 	let guessInput = $state('');
 	let lockedGuess = $state('');
 	let currentRound = $state<Partial<Riddle> | undefined>(undefined);
+	let profileSheetOpen = $state(false);
+	let profilePrompted = $state(false);
 
 	const trimmedGuess = $derived(cleanPrompt(guessInput));
+	const profileCopy = $derived.by(() => {
+		if (!hasSavedProfile) {
+			return 'Add a quick local profile to tilt the AI toward your name, vibe, and favorite topics.';
+		}
+
+		if (activeProfile.name) {
+			return `Future rounds will quietly personalize for ${activeProfile.name}.`;
+		}
+
+		return 'Future rounds will quietly use your saved vibe and favorite topics.';
+	});
 	const statusCopy = $derived.by(() => {
 		if (loading) {
 			return 'The engine is drafting a suspicious setup.';
@@ -51,6 +73,29 @@
 
 		return currentRound.statusLine ?? 'Type your guess, then reveal the answer.';
 	});
+
+	$effect(() => {
+		if (profilePrompted || profileQuery.loading || profileQuery.error) {
+			return;
+		}
+
+		if (!hasSavedProfile) {
+			profileSheetOpen = true;
+			profilePrompted = true;
+		}
+	});
+
+	async function saveProfile(profile: PersonalizationProfile) {
+		const normalized = normalizeProfile(profile);
+
+		await db.profile.put({
+			id: PROFILE_RECORD_ID,
+			...normalized,
+			updatedAt: Date.now()
+		});
+
+		profileSheetOpen = false;
+	}
 
 	async function generateRound() {
 		const nextRound = generationCount + 1;
@@ -74,7 +119,7 @@
 			const round = await requestRound({
 				prompt: '',
 				round: nextRound,
-				profile: emptyProfile
+				profile: activeProfile
 			});
 
 			currentRound = round;
@@ -86,9 +131,21 @@
 		}
 	}
 
-	function revealAnswer() {
+	async function revealAnswer() {
 		lockedGuess = trimmedGuess;
 		revealed = true;
+
+		if (currentRound && currentRound.answer) {
+			try {
+				await db.rounds.add({
+					riddle: currentRound as Riddle,
+					userGuess: lockedGuess,
+					createdAt: Date.now()
+				});
+			} catch (error) {
+				console.error('Failed to save round history:', error);
+			}
+		}
 	}
 
 	function handleGuessSubmit(event: SubmitEvent) {
@@ -122,6 +179,9 @@
 					<span>All innocent answers</span>
 				</Badge>
 				<Badge variant="outline" class="gap-1.5 bg-card/70">
+					<span>{hasSavedProfile ? 'Profile saved locally' : 'Profile optional'}</span>
+				</Badge>
+				<Badge variant="outline" class="gap-1.5 bg-card/70">
 					{revealed ? 'Answer open' : loading ? 'Writing' : 'Guessing'}
 				</Badge>
 			</div>
@@ -134,7 +194,7 @@
 				</h1>
 				<p class="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
 					Read the suggestive setup, type your best guess, and find out whether your mind stayed
-					clean or drifted dirty.
+					clean or drifted dirty. {profileCopy}
 				</p>
 			</div>
 		</div>
@@ -145,6 +205,12 @@
 				class="inline-flex h-11 items-center justify-center rounded-full border border-border/80 bg-card/80 px-5 text-sm font-medium text-foreground transition-colors hover:border-primary/20 hover:bg-primary/5"
 			>
 				Back to the setup
+			</a>
+			<a
+				href="/dashboard"
+				class="inline-flex h-11 items-center justify-center rounded-full border border-border/80 bg-card/80 px-5 text-sm font-medium text-foreground transition-colors hover:border-primary/20 hover:bg-primary/5"
+			>
+				History
 			</a>
 			<Button class="gap-2 px-5" onclick={generateRound} disabled={loading}>
 				{#if loading}
@@ -180,89 +246,107 @@
 			/>
 		</div>
 
-		<Card.Root class="border-border/80 bg-card/80 shadow-sm backdrop-blur">
-			<Card.Header class="space-y-3 pb-4">
-				<div class="flex flex-wrap items-center gap-2">
-					<Badge variant="secondary" class="gap-1.5 bg-secondary/70">
-						<span>Your filthy guess</span>
-					</Badge>
-					<Badge variant="outline" class="bg-background/70">
-						{currentRound?.topic ?? 'Waiting for a suggestive category'}
-					</Badge>
-				</div>
-				<Card.Title class="text-2xl font-semibold tracking-tight"
-					>Name the innocent answer</Card.Title
-				>
-				<Card.Description>
-					{revealed
-						? 'Round complete. Compare your guess, then try another one.'
-						: 'Type your best guess. You can reveal with or without an entry.'}
-				</Card.Description>
-			</Card.Header>
+		<div class="space-y-4">
+			<ProfileSummaryCard
+				profile={activeProfile}
+				onEdit={() => {
+					profileSheetOpen = true;
+				}}
+				description="Quietly saved on this device and passed into every new AI round."
+			/>
 
-			<Card.Content class="space-y-6">
-				<form class="space-y-4" onsubmit={handleGuessSubmit}>
-					<div class="space-y-3">
-						<label for="guess" class="my-2 text-sm leading-none font-medium text-foreground">
-							What innocent answer are you seeing?
-						</label>
-						<div class="flex gap-2">
-							<Input
-								id="guess"
-								bind:value={guessInput}
-								placeholder="Type your guess here"
-								disabled={loading || revealed}
-								autocomplete="off"
-								class="flex-1"
-							/>
-							<Button
-								type="submit"
-								class="gap-2"
-								disabled={!currentRound?.answer || loading || revealed}
-							>
-								<Eye class="size-4" />
-								<span class="hidden sm:inline">Reveal</span>
-							</Button>
-						</div>
+			<Card.Root class="border-border/80 bg-card/80 shadow-sm backdrop-blur">
+				<Card.Header class="space-y-3 pb-4">
+					<div class="flex flex-wrap items-center gap-2">
+						<Badge variant="secondary" class="gap-1.5 bg-secondary/70">
+							<span>Your filthy guess</span>
+						</Badge>
+						<Badge variant="outline" class="bg-background/70">
+							{currentRound?.topic ?? 'Waiting for a suggestive category'}
+						</Badge>
 					</div>
-				</form>
+					<Card.Title class="text-2xl font-semibold tracking-tight"
+						>Name the innocent answer</Card.Title
+					>
+					<Card.Description>
+						{revealed
+							? 'Round complete. Compare your guess, then try another one.'
+							: 'Type your best guess. You can reveal with or without an entry.'}
+					</Card.Description>
+				</Card.Header>
 
-				<Separator />
+				<Card.Content class="space-y-6">
+					<form class="space-y-4" onsubmit={handleGuessSubmit}>
+						<div class="space-y-3">
+							<label for="guess" class="my-2 text-sm leading-none font-medium text-foreground">
+								What innocent answer are you seeing?
+							</label>
+							<div class="mt-3 flex gap-2">
+								<Input
+									id="guess"
+									bind:value={guessInput}
+									placeholder="Type your guess here"
+									disabled={loading || revealed}
+									autocomplete="off"
+									class="flex-1"
+								/>
+								<Button
+									type="submit"
+									class="gap-2"
+									disabled={!currentRound?.answer || loading || revealed}
+								>
+									<Eye class="size-4" />
+									<span class="hidden sm:inline">Reveal</span>
+								</Button>
+							</div>
+						</div>
+					</form>
 
-				<div class="grid gap-3 sm:grid-cols-2">
-					<Card.Root class="border-border/70 bg-background/60 shadow-none">
-						<Card.Header class="space-y-2 py-4">
-							<Card.Title class="text-base">Round status</Card.Title>
-							<Card.Description>{statusCopy}</Card.Description>
-						</Card.Header>
-					</Card.Root>
-					<Card.Root class="border-border/70 bg-background/60 shadow-none">
-						<Card.Header class="space-y-2 py-4">
-							<Card.Title class="text-base">Your last entry</Card.Title>
-							<Card.Description>
-								{lockedGuess || trimmedGuess || 'Nothing typed yet.'}
-							</Card.Description>
-						</Card.Header>
-					</Card.Root>
-				</div>
-
-				<div>
 					<Separator />
-				</div>
 
-				<div class="grid gap-3">
-					{#each flowSteps as step, index (step)}
+					<div class="grid gap-3 sm:grid-cols-2">
 						<Card.Root class="border-border/70 bg-background/60 shadow-none">
 							<Card.Header class="space-y-2 py-4">
-								<Card.Description class="text-xs tracking-[0.2em] uppercase">
-									Clue {index + 1}
-								</Card.Description>
-								<Card.Title class="text-base leading-6">{step}</Card.Title>
+								<Card.Title class="text-base">Round status</Card.Title>
+								<Card.Description>{statusCopy}</Card.Description>
 							</Card.Header>
 						</Card.Root>
-					{/each}
-				</div>
-			</Card.Content>
-		</Card.Root>
+						<Card.Root class="border-border/70 bg-background/60 shadow-none">
+							<Card.Header class="space-y-2 py-4">
+								<Card.Title class="text-base">Your last entry</Card.Title>
+								<Card.Description>
+									{lockedGuess || trimmedGuess || 'Nothing typed yet.'}
+								</Card.Description>
+							</Card.Header>
+						</Card.Root>
+					</div>
+
+					<div>
+						<Separator />
+					</div>
+
+					<div class="grid gap-3">
+						{#each flowSteps as step, index (step)}
+							<Card.Root class="border-border/70 bg-background/60 shadow-none">
+								<Card.Header class="space-y-2 py-4">
+									<Card.Description class="text-xs tracking-[0.2em] uppercase">
+										Clue {index + 1}
+									</Card.Description>
+									<Card.Title class="text-base leading-6">{step}</Card.Title>
+								</Card.Header>
+							</Card.Root>
+						{/each}
+					</div>
+				</Card.Content>
+			</Card.Root>
+		</div>
 	</section>
+
+	<ProfileSheet
+		bind:open={profileSheetOpen}
+		profile={activeProfile}
+		onSave={saveProfile}
+		title="Quiet profile, sharper rounds"
+		description="Saved only on this device with svelte-idb and used to personalize new riddles without getting in the way."
+	/>
 </section>

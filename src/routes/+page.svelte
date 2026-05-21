@@ -100,6 +100,12 @@
 					Play the game
 				</a>
 				<a
+					href="/dashboard"
+					class="inline-flex h-11 items-center justify-center rounded-full border border-border/80 bg-card/75 px-5 text-sm font-medium text-foreground transition-colors hover:border-primary/20 hover:bg-primary/5"
+				>
+					View history
+				</a>
+				<a
 					href="#how-it-works"
 					class="inline-flex h-11 items-center justify-center rounded-full border border-border/80 bg-card/75 px-5 text-sm font-medium text-foreground transition-colors hover:border-primary/20 hover:bg-primary/5"
 				>
