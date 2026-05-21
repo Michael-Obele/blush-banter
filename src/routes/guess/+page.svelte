@@ -51,6 +51,7 @@
 	let guessInput = $state('');
 	let lockedGuess = $state('');
 	let currentRound = $state<Partial<Riddle> | undefined>(undefined);
+	let currentRoundSnapshot: Partial<Riddle> | undefined = undefined;
 	let profileSheetOpen = $state(false);
 	let profilePrompted = $state(false);
 
@@ -126,6 +127,7 @@
 		};
 
 		currentRound = draft;
+		currentRoundSnapshot = draft;
 
 		try {
 			const round = await requestRound({
@@ -135,7 +137,9 @@
 			});
 
 			currentRound = round;
+			currentRoundSnapshot = round;
 		} catch (error) {
+			currentRoundSnapshot = undefined;
 			roundError = error instanceof Error ? error.message : 'Failed to generate the next riddle.';
 			currentRound = undefined;
 		} finally {
@@ -147,10 +151,10 @@
 		lockedGuess = trimmedGuess;
 		revealed = true;
 
-		if (currentRound && currentRound.answer) {
+		if (currentRoundSnapshot && currentRoundSnapshot.answer) {
 			try {
 				await db.rounds.add({
-					riddle: currentRound as Riddle,
+					riddle: { ...currentRoundSnapshot } as Riddle,
 					userGuess: lockedGuess,
 					createdAt: Date.now()
 				});
