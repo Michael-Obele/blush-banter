@@ -6,7 +6,7 @@
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { EMPTY_PROFILE, normalizeProfile, type PersonalizationProfile } from '$lib/data/riddles';
-	import { NotebookPen, Sparkles, User, UserPen } from '@lucide/svelte';
+	import { Database, NotebookPen, Save, Sparkles, User, UserPen } from '@lucide/svelte';
 
 	type Props = {
 		open?: boolean;
@@ -79,7 +79,10 @@
 						<UserPen class="size-3.5" />
 						<span>Personalization</span>
 					</Badge>
-					<Badge variant="outline" class="bg-background/70">Stored locally with IndexedDB</Badge>
+					<Badge variant="outline" class="gap-1.5 bg-background/70">
+						<Database class="size-3.5" />
+						<span>Stored locally with IndexedDB</span>
+					</Badge>
 				</div>
 				<Sheet.Title class="text-left text-2xl font-semibold tracking-tight">{title}</Sheet.Title>
 				<Sheet.Description class="text-left">{description}</Sheet.Description>
@@ -176,8 +179,10 @@
 				</Button>
 				<Button type="submit" class="gap-2 rounded-full px-5" disabled={saving}>
 					{#if saving}
+						<Save class="size-4" />
 						Saving...
 					{:else}
+						<Save class="size-4" />
 						Save profile
 					{/if}
 				</Button>

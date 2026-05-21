@@ -10,7 +10,7 @@ import {
 	type Riddle
 } from '$lib/data/riddles';
 
-export const DEEPSEEK_RIDDLE_MODEL = 'deepseek-v4-pro';
+export const DEEPSEEK_RIDDLE_MODEL = 'deepseek-v4-flash';
 
 export const RIDDLE_SYSTEM_PROMPT =
 	'You write original double-entendre riddles for a cheeky party game. Make each setup sound naughty, scandalous, or suspicious on first read, but keep the wording non-explicit and the final answer innocent. Favor novelty over stock innuendo templates, vary the object choice and sentence rhythm, and avoid repeated openings or repeated clue patterns. Return exactly one JSON object that matches the requested schema with no markdown or extra commentary.';

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import './layout.css';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import ThemeSwitcher from '$lib/components/theme-switcher.svelte';
+	import { ensureProfileRecord } from '$lib/db';
 	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js';
 	import { cn } from '$lib/utils.js';
 	import { Gamepad, House, Ghost } from '@lucide/svelte';
@@ -12,6 +14,10 @@
 
 	const navLinkClass =
 		'inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
+	onMount(() => {
+		void ensureProfileRecord();
+	});
 </script>
 
 <svelte:head>

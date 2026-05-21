@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { hasProfileDetails, type PersonalizationProfile } from '$lib/data/riddles';
-	import { NotebookPen, Sparkles, User, UserPen } from '@lucide/svelte';
+	import { Database, NotebookPen, Sparkles, User, UserPen } from '@lucide/svelte';
 
 	type Props = {
 		profile: PersonalizationProfile;
@@ -55,6 +55,21 @@
 	</Card.Header>
 
 	<Card.Content class="space-y-3">
+		<div class="rounded-2xl border border-border/70 bg-background/65 px-4 py-3">
+			<div class="flex items-center gap-2 text-sm font-medium text-foreground">
+				<Database class="size-4 text-primary" />
+				<span>{hasProfile ? 'Profile saved locally' : 'Local storage ready'}</span>
+			</div>
+			<p class="mt-2 text-sm leading-6 text-muted-foreground">
+				{#if hasProfile}
+					This device already has a saved profile record, and future rounds will keep using it.
+				{:else}
+					This device already has a reserved local profile record, so your settings can be saved the
+					moment you add them.
+				{/if}
+			</p>
+		</div>
+
 		{#if hasProfile}
 			{#each profileRows as row (row.label)}
 				<div class="rounded-2xl border border-border/70 bg-background/65 px-4 py-3">
@@ -67,9 +82,10 @@
 			{/each}
 		{:else}
 			<div class="rounded-2xl border border-dashed border-border/80 bg-background/65 px-4 py-4">
-				<p class="text-sm font-medium text-foreground">No profile saved yet.</p>
+				<p class="text-sm font-medium text-foreground">No profile details saved yet.</p>
 				<p class="mt-2 text-sm leading-6 text-muted-foreground">
-					Add a name, a vibe, or favorite topics so the AI can steer the riddles toward your taste.
+					Add a name, a vibe, or favorite topics so the AI can steer the riddles toward your taste
+					without needing any extra setup first.
 				</p>
 			</div>
 		{/if}
