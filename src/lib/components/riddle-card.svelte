@@ -4,7 +4,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-	import { Bot, ArrowRight, Eye, RefreshCw, Shield, Shuffle } from '@lucide/svelte';
+	import { Bot, Eye, RefreshCw, Shield, Target } from '@lucide/svelte';
 	import type { Riddle } from '$lib/data/riddles';
 
 	type Props = {
@@ -12,35 +12,12 @@
 		revealed?: boolean;
 		loading?: boolean;
 		playerGuess?: string;
-		onReveal?: () => void;
 		onShuffle?: () => void;
 	};
 
-	let {
-		riddle,
-		revealed = false,
-		loading = false,
-		playerGuess = '',
-		onReveal,
-		onShuffle
-	}: Props = $props();
+	let { riddle, revealed = false, loading = false, playerGuess = '', onShuffle }: Props = $props();
 
 	const hasGuess = $derived(playerGuess.trim().length > 0);
-	const canReveal = $derived(Boolean(riddle?.answer) && !loading);
-	const canShuffle = $derived(!loading);
-
-	const handlePrimaryAction = () => {
-		if (loading) return;
-
-		if (revealed) {
-			onShuffle?.();
-			return;
-		}
-
-		if (canReveal) {
-			onReveal?.();
-		}
-	};
 </script>
 
 <Card.Root
@@ -73,14 +50,12 @@
 
 		<div class="space-y-1.5">
 			<Card.Title class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-				{revealed
-					? (riddle?.answer ?? 'Ready when DeepSeek responds')
-					: 'Can you guess the answer?'}
+				{revealed ? (riddle?.answer ?? 'Ready when DeepSeek responds') : 'Read the setup carefully'}
 			</Card.Title>
 			<Card.Description class="max-w-prose text-sm leading-6 sm:text-base">
 				{revealed
 					? 'The punch line stays harmless, even when the setup sounds suspicious.'
-					: 'Read the setup, type your guess, then reveal the answer.'}
+					: 'Stay with the clue first. The answer stays hidden until you reveal it from the guess panel.'}
 			</Card.Description>
 		</div>
 	</Card.Header>
@@ -119,7 +94,7 @@
 				class="relative space-y-4 rounded-[calc(var(--radius)+0.35rem)] border border-primary/20 bg-primary/8 p-5 shadow-sm sm:p-6"
 			>
 				<div class="flex items-center gap-2 text-sm font-medium text-primary">
-					<ArrowRight class="size-4" />
+					<Target class="size-4" />
 					<span>The answer</span>
 				</div>
 
@@ -148,7 +123,7 @@
 						<div
 							class="rounded-xl border border-border/80 bg-card/90 px-4 py-3 text-center text-sm text-muted-foreground"
 						>
-							Answer stays hidden until you tap show answer.
+							Answer stays hidden until you reveal it from the guess panel.
 						</div>
 					</div>
 				{/if}
@@ -163,23 +138,4 @@
 			</div>
 		</div>
 	</Card.Content>
-
-	<Card.Footer class="flex flex-col gap-3 pt-0 sm:flex-row">
-		<Button
-			class="w-full gap-2 transition-all sm:flex-1"
-			onclick={handlePrimaryAction}
-			disabled={loading || (!revealed && !canReveal)}
-		>
-			{#if loading}
-				<RefreshCw class="size-4 animate-spin" />
-				Thinking...
-			{:else if revealed}
-				<RefreshCw class="size-4" />
-				Play again
-			{:else}
-				<Eye class="size-4" />
-				Reveal answer
-			{/if}
-		</Button>
-	</Card.Footer>
 </Card.Root>
